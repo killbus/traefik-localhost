@@ -1,0 +1,5 @@
+/mysql-migration/
+*.code-workspace
+*.crt
+*.csr
+*.key

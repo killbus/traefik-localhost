@@ -1,0 +1,11 @@
+[[tls.certificates]]
+  certFile = "/opt/traefik/certs/phpmyadmin.localhost.crt"
+  keyFile = "/opt/traefik/certs/phpmyadmin.localhost.key"
+
+[[tls.certificates]]
+  certFile = "/opt/traefik/certs/whoami.localhost.crt"
+  keyFile = "/opt/traefik/certs/whoami.localhost.key"
+
+# [[tls.certificates]]
+#   certFile = "/opt/traefik/certs/wp.localhost.crt"
+#   keyFile = "/opt/traefik/certs/wp.localhost.key"
