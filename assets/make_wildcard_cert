@@ -1,0 +1,34 @@
+#!/bin/bash
+URL=""
+
+while getopts u: option; do
+    case "${option}"
+    in
+        u) URL=${OPTARG};;
+    esac
+done
+
+if [ -z $URL ]; then
+   echo "you must add a url";
+else
+    echo "thank you for URL";
+    openssl genrsa -out $URL.key 4096
+    openssl req -new -sha256 \
+        -out $URL.csr \
+        -key $URL.key \
+        -config wildcard_cert.conf
+    openssl req -text -noout -in $URL.csr
+    openssl x509 -req \
+        -days 3650 \
+        -in $URL.csr \
+        -signkey $URL.key \
+        -out $URL.crt \
+        -extensions req_ext \
+        -extfile cert.conf
+
+    mv $URL.csr ../traefik/certs/$URL.csr
+    mv $URL.key ../traefik/certs/$URL.key
+    mv $URL.crt ../traefik/certs/$URL.crt
+
+    echo "now run sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain  ../traefik/certs/$URL.crt"
+fi
