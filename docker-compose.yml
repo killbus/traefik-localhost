@@ -3,9 +3,10 @@ version: "3.3"
 services:
 
     traefik:
-        image: "traefik:v2.2"
+        image: "traefik:v2.3"
         container_name: "traefik"
         command:
+            - "--log.level=DEBUG"
             - "--api.insecure=true"
             - "--providers.docker=true"
             - "--providers.docker.exposedbydefault=false"
@@ -18,6 +19,7 @@ services:
         ports:
             - "443:443" #Docker sends requests on port 443 to Traefik on port 443
             - "80:80"
+            - "3306:3306"
             - "8080:8080"
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -25,70 +27,16 @@ services:
             - ./traefik/certs:/opt/traefik/certs
         networks: 
             - local_traefik
-    db:
-        # connect to shell
-        # apt-get update
-        # apt-get install pv
-        # pv sql.sql | mysql -u root -p {dbname}
-        image: 'mysql:5.7'
-        command: '--default-authentication-plugin=mysql_native_password'
-        container_name: wpdb
-        restart: always
-        environment:
-            - VIRTUAL_PROTO=https
-            - MYSQL_ROOT_PASSWORD=root
-            - MYSQL_ROOT_HOST=%
-            - MYSQL_USER=fuubar
-            - MYSQL_PASSWORD=foobat
-        labels:
-            - "traefik.tcp.routers.mysql.rule=HostSNI(`*`)"
-            - "traefik.tcp.routers.mysql.entrypoints=mysql"
-            - "traefik.tcp.routers.mysql.service=mysql-svc"
-            - "traefik.tcp.services.mysql-svc.loadbalancer.server.port=3306"
-        volumes:
-            - 'database-volume:/var/lib/mysql'
-            - './mysql-migration:/docker-entrypoint-initdb.d'
-        restart: always
-        ports:
-            - "4306:3306"
-        networks:
-            - local_traefik
-    phpmyadmin:
-        depends_on:
-            - db
-        image: phpmyadmin/phpmyadmin
-        container_name: phpmyadmin
-        restart: always
-        environment:
-            - PMA_HOST=db
-            - PMA_PORT=3306
-            - MYSQL_USER=fuubar
-            - MYSQL_PASSWORD=foobat
-            - MYSQL_ROOT_PASSWORD=root
-            - ENV=development
-            - PHP_UPLOAD_MAX_FILESIZE=1G
-            - PHP_MAX_INPUT_VARS=1G
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
-            - "traefik.http.routers.phpmyadmin.entrypoints=web-secure"
-            - "traefik.http.routers.phpmyadmin.tls=true"
-        expose:
-            - '80'
-            - '443'
-        networks:
-            - local_traefik
     whoami:
         image: "containous/whoami"
         container_name: "hello-world"
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+            - "traefik.http.routers.whoami.rule=Host(`127.0.0.1`)"
             - "traefik.http.routers.whoami.entrypoints=web-secure"
             - "traefik.http.routers.whoami.tls=true"
+            - "traefik.http.routers.whoami.tls.options=default"
         networks: 
             - local_traefik
-volumes:
-   database-volume:
 networks:
     local_traefik: null
